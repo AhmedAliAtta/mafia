@@ -565,6 +565,7 @@
                 }
                 selector.appendChild(option);
             });
+            // Disable delete button if only default record is present
             document.querySelector('.mafia-section .record-controls button:last-of-type').disabled = (recordNames.length === 1 && recordNames[0] === MAFIA_DEFAULT_RECORD_NAME);
         }
 
@@ -581,8 +582,10 @@
                     }
                 }
                 if (await mafia_saveRecord(recordName)) {
+                    // بعد الحفظ، نحفظ السجل الافتراضي فارغًا لو كنا عدلنا عليه قبل الحفظ الجديد
+                    // هذا يضمن أن السجل الافتراضي يبدأ فارغًا إذا تم التبديل إليه بعد حفظ سجل جديد
                     await setDoc(doc(db, "mafiaRecords", MAFIA_DEFAULT_RECORD_NAME), { data: [], lastUpdated: new Date() });
-                    await mafia_loadRecord(recordName);
+                    await mafia_loadRecord(recordName); // حمل السجل الجديد
                     alert(`تم حفظ السجل "${recordName}" بنجاح.`);
                 }
             } else if (recordName !== null) {
@@ -625,7 +628,7 @@
                             await mafia_loadRecord(MAFIA_DEFAULT_RECORD_NAME);
                         }
                         mafia_updateRecordSelector(currentRecordName === recordToDelete ? MAFIA_DEFAULT_RECORD_NAME : currentRecordName);
-                        alert(`تم حذف السجل "${recordToDelete}".`);
+                        alert(`تم حذف السجل "${recordToDelete}" بنجاح.`);
                     } catch (e) {
                         console.error("Error deleting document: ", e);
                         alert("حدث خطأ أثناء حذف السجل. الرجاء المحاولة مرة أخرى.");
@@ -637,7 +640,8 @@
         }
 
         // دالة للتعامل مع أزرار النسخ واللصق والمسح والحذف
-        async function mafia_handleButtonClick(buttonElement, actionFunction, elementId) {
+        // تم تغييرها لتصبح عامة (Global) حتى يمكن استدعاؤها من الـ HTML
+        window.mafia_handleButtonClick = async function(buttonElement, actionFunction, elementId) {
             let success = false;
             try {
                 if (actionFunction === 'copyToClipboard') {
@@ -654,8 +658,6 @@
                 console.error('Error in mafia_handleButtonClick:', err);
                 success = false;
             }
-            // بما أن oninput موجودة على الخانات، فالحفظ هيتم تلقائي.
-            // لكن هنا ممكن نحتاجها لو غيرنا حاجة مش من الـ input (زي الحذف)
             await mafia_saveCurrentData();
         }
 
@@ -705,7 +707,8 @@
         }
 
         // دالة لإضافة خانة إدخال جديدة
-        function mafia_addInputField(initialValue = '', saveAfterAdd = true) {
+        // تم جعلها عامة (Global) حتى يمكن استدعاؤها من الـ HTML
+        window.mafia_addInputField = function(initialValue = '', saveAfterAdd = true) {
             mafia_inputCounter++;
             const container = document.getElementById('mafiaInputFieldsContainer');
 
@@ -762,7 +765,8 @@
         }
 
         // دالة لمسح كل محتويات السجل الحالي والبدء بسجل جديد افتراضي
-        async function mafia_clearCurrentDataAndStartNew() {
+        // تم جعلها عامة (Global)
+        window.mafia_clearCurrentDataAndStartNew = async function() {
             const confirmClear = confirm("هل أنت متأكد أنك تريد مسح جميع محتويات السجل الحالي؟");
             if (confirmClear) {
                 const container = document.getElementById('mafiaInputFieldsContainer');
@@ -797,7 +801,8 @@
 
         const PROFILE_SAVED_CODES_KEY = 'savedProfileCodesList';
 
-        function profile_generateProfileLinks() {
+        // تم جعلها عامة (Global)
+        window.profile_generateProfileLinks = function() {
             const profileCode = document.getElementById('profileCode').value.trim();
 
             if (!profileCode) {
@@ -844,7 +849,8 @@
             }
         }
 
-        async function profile_saveProfileCode() {
+        // تم جعلها عامة (Global)
+        window.profile_saveProfileCode = async function() {
             const profileCode = document.getElementById('profileCode').value.trim();
             const codeName = document.getElementById('codeName').value.trim();
 
@@ -882,7 +888,8 @@
             }
         }
 
-        async function profile_deleteProfileCode(codeName) {
+        // تم جعلها عامة (Global)
+        window.profile_deleteProfileCode = async function(codeName) {
             if (!confirm(`هل أنت متأكد من حذف الكود "${codeName}"؟`)) {
                 return;
             }
@@ -895,7 +902,8 @@
             }
         }
 
-        function profile_loadProfileCode(codeToLoad) {
+        // تم جعلها عامة (Global)
+        window.profile_loadProfileCode = function(codeToLoad) {
             document.getElementById('profileCode').value = codeToLoad;
             alert('تم تحميل الكود في خانة الإدخال العلوية.');
         }
@@ -924,10 +932,26 @@
             outputDiv.innerHTML = htmlContent;
         }
 
+        // تم جعل هذه الدوال عامة (Global) لاستدعائها من HTML
+        window.mafia_saveRecordAsNew = mafia_saveRecordAsNew;
+        window.mafia_loadSelectedRecord = mafia_loadSelectedRecord;
+        window.mafia_deleteSelectedRecord = mafia_deleteSelectedRecord;
+
         // الدوال التي يتم استدعاؤها عند تحميل الصفحة لأول مرة
         document.addEventListener('DOMContentLoaded', async () => {
-            await mafia_loadSavedData();
-            await profile_renderSavedCodes();
+            await mafia_updateRecordSelector(); // حمل أسماء السجلات المتاحة
+            // بعد تحميل السجلات المتاحة، حمل السجل النشط حالياً (الافتراضي غالباً)
+            // لو مفيش سجل حالي، هيرجع لـ defaultRecord
+            const currentRecordDoc = await getDoc(doc(db, "mafiaMetadata", MAFIA_CURRENT_RECORD_KEY));
+            const currentRecordName = currentRecordDoc.exists() ? currentRecordDoc.data().current : MAFIA_DEFAULT_RECORD_NAME;
+            await mafia_loadRecord(currentRecordName);
+
+            // لو مفيش أي خانات إدخال موجودة (مثلاً أول مرة تفتح الصفحة)، أضف واحدة
+            if (document.querySelectorAll('#mafiaInputFieldsContainer input[type="text"]').length === 0) {
+                mafia_addInputField('', false);
+            }
+
+            await profile_renderSavedCodes(); // عرض أكواد البروفايلات المحفوظة
         });
 
     </script>
