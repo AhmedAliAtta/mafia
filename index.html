@@ -382,7 +382,6 @@
 </head>
 <body>
 
-    <!-- قسم أداة إدخال النصوص -->
     <div class="mafia-section">
         <button class="reload-btn" onclick="mafia_clearCurrentDataAndStartNew()">
             <i class="fas fa-redo-alt"></i> مسح الكل
@@ -410,7 +409,6 @@
 
     <hr style="width: 80%; margin: 40px auto; border: 0; border-top: 1px dashed #ccc;">
 
-    <!-- قسم مولّد روابط البروفايلات -->
     <div class="profile-section container">
         <h2>مولّد روابط البروفايلات</h2>
         <p>أدخل الكود المشفر (Base64) للبروفايل، وستحصل على الروابط الكاملة جاهزة للنسخ.</p>
@@ -447,7 +445,6 @@
         import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
         // ** إعدادات Firebase الخاصة بك **
-        // هذا الكود هو الكود الفعلي الذي حصلت عليه من لوحة تحكم Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyC4_IUaC1uiqq05TKpL348kXt1aNJf1jzM",
             authDomain: "mafia-3l-entag.firebaseapp.com",
@@ -628,7 +625,7 @@
                             await mafia_loadRecord(MAFIA_DEFAULT_RECORD_NAME);
                         }
                         mafia_updateRecordSelector(currentRecordName === recordToDelete ? MAFIA_DEFAULT_RECORD_NAME : currentRecordName);
-                        alert(`تم حذف السجل "${recordToDelete}" بنجاح.`);
+                        alert(`تم حذف السجل "${recordToDelete}".`);
                     } catch (e) {
                         console.error("Error deleting document: ", e);
                         alert("حدث خطأ أثناء حذف السجل. الرجاء المحاولة مرة أخرى.");
@@ -657,6 +654,8 @@
                 console.error('Error in mafia_handleButtonClick:', err);
                 success = false;
             }
+            // بما أن oninput موجودة على الخانات، فالحفظ هيتم تلقائي.
+            // لكن هنا ممكن نحتاجها لو غيرنا حاجة مش من الـ input (زي الحذف)
             await mafia_saveCurrentData();
         }
 
@@ -925,6 +924,7 @@
             outputDiv.innerHTML = htmlContent;
         }
 
+        // الدوال التي يتم استدعاؤها عند تحميل الصفحة لأول مرة
         document.addEventListener('DOMContentLoaded', async () => {
             await mafia_loadSavedData();
             await profile_renderSavedCodes();
