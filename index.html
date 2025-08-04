@@ -249,13 +249,32 @@
         .links-output p, .saved-codes-output p {
             margin: 5px 0;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .links-output a {
             color: #007bff;
             text-decoration: none;
+            flex-grow: 1;
+            word-break: break-all;
         }
         .links-output a:hover {
             text-decoration: underline;
+        }
+        .links-output .copy-link-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            white-space: nowrap;
+        }
+        .links-output .copy-link-btn:hover {
+            background-color: #218838;
         }
 
         .saved-code-item {
@@ -425,6 +444,23 @@
             <p>الروابط ستظهر هنا بعد التوليد.</p>
         </div>
     </div>
+    
+    <div class="profile-section container">
+        <h2>مولّد روابط تسجيل الدخول</h2>
+        <p>أدخل الكود المشفر (Base64) للبروفايل (اختياري)، وستحصل على روابط تسجيل الدخول جاهزة للنسخ. إذا تركت الخانة فارغة، سيتم توليد الروابط الأساسية فقط.</p>
+
+        <label for="loginCode">كود البروفايل (مثل: NDIyNDk2MjQ5Mw==):</label>
+        <input type="text" id="loginCode" placeholder="أدخل كود البروفايل هنا">
+
+        <div class="button-group">
+            <button onclick="login_generateLoginLinks()">توليد الروابط</button>
+            <button onclick="login_openAllLinks()">فتح كل الروابط في علامات تبويب جديدة</button>
+        </div>
+
+        <div id="outputLoginLinks" class="links-output">
+            <p>الروابط ستظهر هنا بعد التوليد.</p>
+        </div>
+    </div>
 
     <div class="profile-section container">
         <h2>إدارة أكواد البروفايلات المحفوظة</h2>
@@ -583,10 +619,8 @@
                     }
                 }
                 if (await mafia_saveRecord(recordName)) {
-                    // بعد الحفظ، نحفظ السجل الافتراضي فارغًا لو كنا عدلنا عليه قبل الحفظ الجديد
-                    // هذا يضمن أن السجل الافتراضي يبدأ فارغًا إذا تم التبديل إليه بعد حفظ سجل جديد
                     await setDoc(doc(db, "mafiaRecords", MAFIA_DEFAULT_RECORD_NAME), { data: [], lastUpdated: new Date() });
-                    await mafia_loadRecord(recordName); // حمل السجل الجديد
+                    await mafia_loadRecord(recordName);
                     alert(`تم حفظ السجل "${recordName}" بنجاح.`);
                 }
             } else if (recordName !== null) {
@@ -641,7 +675,6 @@
         }
 
         // دالة للتعامل مع أزرار النسخ واللصق والمسح والحذف
-        // تم تغييرها لتصبح عامة (Global) حتى يمكن استدعاؤها من الـ HTML
         window.mafia_handleButtonClick = async function(buttonElement, actionFunction, elementId) {
             let success = false;
             try {
@@ -708,7 +741,6 @@
         }
 
         // دالة لإضافة خانة إدخال جديدة
-        // تم جعلها عامة (Global) حتى يمكن استدعاؤها من الـ HTML
         window.mafia_addInputField = function(initialValue = '', saveAfterAdd = true) {
             mafia_inputCounter++;
             const container = document.getElementById('mafiaInputFieldsContainer');
@@ -766,7 +798,6 @@
         }
 
         // دالة لمسح كل محتويات السجل الحالي والبدء بسجل جديد افتراضي
-        // تم جعلها عامة (Global)
         window.mafia_clearCurrentDataAndStartNew = async function() {
             const confirmClear = confirm("هل أنت متأكد أنك تريد مسح جميع محتويات السجل الحالي؟");
             if (confirmClear) {
@@ -795,14 +826,38 @@
         const profile_baseUrls = [
             "https://mixu.chat/profile/",
             "https://1v1chat.me/profile/",
-            "https://livuapp.com/profile/",
+            "https://livcam.me/profile/",
             "https://tinchat.me/profile/",
-            "https://livcam.me/profile/"
+            "https://livuapp.com/profile/"
+        ];
+        
+        const login_baseUrls = [
+            "https://mixu.chat/login",
+            "https://1v1chat.me/login",
+            "https://livcam.me/login",
+            "https://tinchat.me/login",
+            "https://livuapp.com/login"
         ];
 
         const PROFILE_SAVED_CODES_KEY = 'savedProfileCodesList';
+        
+        // دالة لفتح كل الروابط في نوافذ جديدة للبروفايلات
+        window.profile_openAllLinks = function() {
+            const outputLinksDiv = document.getElementById('outputLinks');
+            const links = outputLinksDiv.querySelectorAll('a');
 
-        // تم جعلها عامة (Global)
+            if (links.length === 0) {
+                alert('لا توجد روابط لتفتح. الرجاء توليد الروابط أولاً.');
+                return;
+            }
+            
+            if (confirm(`هل أنت متأكد من أنك تريد فتح ${links.length} رابط في علامات تبويب جديدة؟`)) {
+                links.forEach((link) => {
+                    window.open(link.href, '_blank');
+                });
+            }
+        }
+
         window.profile_generateProfileLinks = function() {
             const profileCode = document.getElementById('profileCode').value.trim();
 
@@ -818,28 +873,72 @@
             } else {
                 profile_baseUrls.forEach((baseUrl, index) => {
                     const fullUrl = baseUrl + profileCode;
-                    generatedLinksHtml += `<p><strong>رابط ${index + 1}:</strong> <a href="${fullUrl}" target="_blank">${fullUrl}</a></p>`;
+                    generatedLinksHtml += `
+                        <p>
+                            <strong>رابط ${index + 1}:</strong> 
+                            <a href="${fullUrl}" target="_blank">${fullUrl}</a>
+                            <button class="copy-link-btn" onclick="profile_copyLink('${fullUrl}')">
+                                <i class="fas fa-copy"></i> نسخ
+                            </button>
+                        </p>
+                    `;
                 });
             }
-
             document.getElementById('outputLinks').innerHTML = generatedLinksHtml;
         }
         
-        // دالة جديدة لفتح جميع الروابط
-        window.profile_openAllLinks = function() {
-            const outputLinksDiv = document.getElementById('outputLinks');
+        // دالة جديدة لفتح كل الروابط في نوافذ جديدة لتسجيل الدخول
+        window.login_openAllLinks = function() {
+            const outputLinksDiv = document.getElementById('outputLoginLinks');
             const links = outputLinksDiv.querySelectorAll('a');
 
             if (links.length === 0) {
                 alert('لا توجد روابط لتفتح. الرجاء توليد الروابط أولاً.');
                 return;
             }
+            
+            if (confirm(`هل أنت متأكد من أنك تريد فتح ${links.length} رابط في علامات تبويب جديدة؟`)) {
+                links.forEach((link) => {
+                    window.open(link.href, '_blank');
+                });
+            }
+        }
+        
+        window.login_generateLoginLinks = function() {
+            const loginCode = document.getElementById('loginCode').value.trim();
+            const delimiter = loginCode ? '/' : '';
+            
+            let generatedLinksHtml = "<h4>الروابط المُولّدة:</h4>";
 
-            links.forEach(link => {
-                window.open(link.href, '_blank');
-            });
+            if (login_baseUrls.length === 0) {
+                generatedLinksHtml += "<p>الرجاء إضافة روابط أساسية في الكود.</p>";
+            } else {
+                login_baseUrls.forEach((baseUrl, index) => {
+                    const fullUrl = baseUrl + delimiter + loginCode;
+                    generatedLinksHtml += `
+                        <p>
+                            <strong>رابط ${index + 1}:</strong> 
+                            <a href="${fullUrl}" target="_blank">${fullUrl}</a>
+                            <button class="copy-link-btn" onclick="profile_copyLink('${fullUrl}')">
+                                <i class="fas fa-copy"></i> نسخ
+                            </button>
+                        </p>
+                    `;
+                });
+            }
+            document.getElementById('outputLoginLinks').innerHTML = generatedLinksHtml;
         }
 
+
+        // دالة جديدة لنسخ رابط معين (يمكن استخدامها لكل من البروفايل وتسجيل الدخول)
+        window.profile_copyLink = function(urlToCopy) {
+            navigator.clipboard.writeText(urlToCopy).then(() => {
+                alert('تم نسخ الرابط بنجاح!');
+            }).catch(err => {
+                console.error('فشل النسخ:', err);
+                alert('فشل نسخ الرابط. الرجاء المحاولة مرة أخرى.');
+            });
+        }
 
         async function profile_getSavedCodes() {
             try {
@@ -866,7 +965,6 @@
             }
         }
 
-        // تم جعلها عامة (Global)
         window.profile_saveProfileCode = async function() {
             const profileCode = document.getElementById('profileCode').value.trim();
             const codeName = document.getElementById('codeName').value.trim();
@@ -905,7 +1003,6 @@
             }
         }
 
-        // تم جعلها عامة (Global)
         window.profile_deleteProfileCode = async function(codeName) {
             if (!confirm(`هل أنت متأكد من حذف الكود "${codeName}"؟`)) {
                 return;
@@ -919,7 +1016,6 @@
             }
         }
 
-        // تم جعلها عامة (Global)
         window.profile_loadProfileCode = function(codeToLoad) {
             document.getElementById('profileCode').value = codeToLoad;
             alert('تم تحميل الكود في خانة الإدخال العلوية.');
@@ -949,28 +1045,22 @@
             outputDiv.innerHTML = htmlContent;
         }
 
-        // تم جعل هذه الدوال عامة (Global) لاستدعائها من HTML
         window.mafia_saveRecordAsNew = mafia_saveRecordAsNew;
         window.mafia_loadSelectedRecord = mafia_loadSelectedRecord;
         window.mafia_deleteSelectedRecord = mafia_deleteSelectedRecord;
 
-        // الدوال التي يتم استدعاؤها عند تحميل الصفحة لأول مرة
         document.addEventListener('DOMContentLoaded', async () => {
-            await mafia_updateRecordSelector(); // حمل أسماء السجلات المتاحة
-            // بعد تحميل السجلات المتاحة، حمل السجل النشط حالياً (الافتراضي غالباً)
-            // لو مفيش سجل حالي، هيرجع لـ defaultRecord
+            await mafia_updateRecordSelector();
             const currentRecordDoc = await getDoc(doc(db, "mafiaMetadata", MAFIA_CURRENT_RECORD_KEY));
             const currentRecordName = currentRecordDoc.exists() ? currentRecordDoc.data().current : MAFIA_DEFAULT_RECORD_NAME;
             await mafia_loadRecord(currentRecordName);
 
-            // لو مفيش أي خانات إدخال موجودة (مثلاً أول مرة تفتح الصفحة)، أضف واحدة
             if (document.querySelectorAll('#mafiaInputFieldsContainer input[type="text"]').length === 0) {
                 mafia_addInputField('', false);
             }
 
-            await profile_renderSavedCodes(); // عرض أكواد البروفايلات المحفوظة
+            await profile_renderSavedCodes();
         });
-
     </script>
 </body>
 </html>
