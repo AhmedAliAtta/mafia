@@ -418,6 +418,7 @@
 
         <div class="button-group">
             <button onclick="profile_generateProfileLinks()">توليد الروابط</button>
+            <button onclick="profile_openAllLinks()">فتح كل الروابط في علامات تبويب جديدة</button>
         </div>
 
         <div id="outputLinks" class="links-output">
@@ -823,6 +824,22 @@
 
             document.getElementById('outputLinks').innerHTML = generatedLinksHtml;
         }
+        
+        // دالة جديدة لفتح جميع الروابط
+        window.profile_openAllLinks = function() {
+            const outputLinksDiv = document.getElementById('outputLinks');
+            const links = outputLinksDiv.querySelectorAll('a');
+
+            if (links.length === 0) {
+                alert('لا توجد روابط لتفتح. الرجاء توليد الروابط أولاً.');
+                return;
+            }
+
+            links.forEach(link => {
+                window.open(link.href, '_blank');
+            });
+        }
+
 
         async function profile_getSavedCodes() {
             try {
