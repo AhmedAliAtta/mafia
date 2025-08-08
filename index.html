@@ -209,6 +209,9 @@
 
     const PROFILE_SAVED_CODES_KEY = 'savedProfileCodesList';
 
+    // VAR: keep the current record name locally to avoid race conditions
+    let currentRecordNameLocal = MAFIA_DEFAULT_RECORD_NAME;
+
     // --------------------------- Helpers ---------------------------
     function el(id){ return document.getElementById(id); }
     function showToast(msg){ const t = el('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=> t.classList.remove('show'), 1800); }
@@ -237,6 +240,11 @@
         }
         await safeSetDoc(["mafiaMetadata", MAFIA_CURRENT_RECORD_KEY], { current: recordName });
         await mafia_updateRecordSelector(recordName);
+
+        // keep local name and remove only that record's temp cache (since it's now saved to Firestore)
+        currentRecordNameLocal = recordName;
+        try{ localStorage.removeItem('mafia_temp_' + recordName); }catch(e){}
+
         return true;
       }catch(e){ console.error('saveRecord', e); showToast('❌ فشل حفظ السجل'); return false; }
     }
@@ -249,14 +257,42 @@
           const dataArray = docSnap.data().data || [];
           mafia_inputCounter = 0;
           for(const v of dataArray) mafia_addInputField(v, false);
-        }else{ mafia_inputCounter = 0; mafia_addInputField('', false); }
+        }else{
+          mafia_inputCounter = 0;
+          mafia_addInputField('', false);
+        }
         mafia_updateInputNumbers();
         await safeSetDoc(["mafiaMetadata", MAFIA_CURRENT_RECORD_KEY], { current: recordName });
         mafia_updateRecordSelector(recordName);
-        // clear local cache for current record to avoid stale reappear
-        localStorage.removeItem('mafia_temp');
+
+        // set local current name to avoid reading from Firestore repeatedly
+        currentRecordNameLocal = recordName;
+
+        // clear only the per-record temp cache (we keep other records intact)
+        try{ localStorage.removeItem('mafia_temp_' + recordName); }catch(e){}
+
         return true;
-      }catch(e){ console.error('loadRecord', e); mafia_inputCounter = 0; mafia_addInputField('', false); showToast('❌ فشل تحميل السجل'); return false; }
+      }catch(e){
+        console.error('loadRecord', e);
+        mafia_inputCounter = 0;
+        mafia_addInputField('', false);
+        showToast('❌ فشل تحميل السجل — سيتم استعادة الكاش إن وُجد');
+        // try to restore per-record cache (only if exists)
+        try{
+          const tmp = localStorage.getItem('mafia_temp_' + recordName);
+          if(tmp){
+            const arr = JSON.parse(tmp);
+            if(Array.isArray(arr) && arr.length>0){
+              document.getElementById('mafiaInputFieldsContainer').innerHTML='';
+              mafia_inputCounter=0;
+              arr.forEach(v=>mafia_addInputField(v,false));
+              mafia_updateInputNumbers();
+              showToast('⚠ تم استعادة البيانات من الكاش المحلي');
+            }
+          }
+        }catch(er){ console.error('restore cache', er); }
+        return false;
+      }
     }
 
     async function mafia_getRecordNamesFromFirebase(){
@@ -284,7 +320,13 @@
         const recordNames = await mafia_getRecordNamesFromFirebase();
         if(recordNames.includes(recordName)){ if(!confirm(`السجل "${recordName}" موجود، استبداله؟`)) return; }
         const ok = await mafia_saveRecord(recordName);
-        if(ok){ await safeSetDoc(["mafiaRecords", MAFIA_DEFAULT_RECORD_NAME], { data: [], lastUpdated: new Date() }); await mafia_loadRecord(recordName); showToast('✅ تم الحفظ'); }
+        if(ok){
+          // set default empty and load the new record
+          await safeSetDoc(["mafiaRecords", MAFIA_DEFAULT_RECORD_NAME], { data: [], lastUpdated: new Date() });
+          await mafia_loadRecord(recordName);
+          currentRecordNameLocal = recordName;
+          showToast('✅ تم الحفظ');
+        }
       }else if(recordName!==null) showToast('⚠ يجب ادخال اسم');
     }
 
@@ -311,6 +353,7 @@
 
         // also clear local cache if it contained the deleted data
         localStorage.removeItem('mafia_temp');
+        try{ localStorage.removeItem('mafia_temp_' + recordToDelete); }catch(e){}
         showToast('✅ تم الحذف');
       }catch(e){ console.error('delete', e); showToast('❌ خطأ في الحذف'); }
     }
@@ -318,13 +361,38 @@
     // --------------------------- Input fields UI ---------------------------
     function createInputGroupElement(index, initialValue){
       const div = document.createElement('div'); div.className='input-group';
-      div.innerHTML = `
-        <button class="remove-field-btn control-btn" title="حذف الخانة">حذف</button>
-        <div class="input-number">${index}.</div>
-        <input type="text" id="mafiaTextInput${index}" value="${escapeHtml(initialValue)}" placeholder="أدخل النص...">
-        <button class="copy-btn control-btn" title="نسخ">نسخ</button>
-        <button class="paste-btn control-btn" title="لصق">لصق</button>
-      `;
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className='remove-field-btn control-btn';
+      removeBtn.title='حذف الخانة';
+      removeBtn.textContent='حذف';
+
+      const numberDiv = document.createElement('div');
+      numberDiv.className='input-number';
+      numberDiv.textContent = index + '.';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = 'mafiaTextInput' + index;
+      input.value = initialValue || '';
+      input.placeholder = 'أدخل النص...';
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className='copy-btn control-btn';
+      copyBtn.title='نسخ';
+      copyBtn.textContent='نسخ';
+
+      const pasteBtn = document.createElement('button');
+      pasteBtn.className='paste-btn control-btn';
+      pasteBtn.title='لصق';
+      pasteBtn.textContent='لصق';
+
+      div.appendChild(removeBtn);
+      div.appendChild(numberDiv);
+      div.appendChild(input);
+      div.appendChild(copyBtn);
+      div.appendChild(pasteBtn);
+
       return div;
     }
 
@@ -369,6 +437,7 @@
         await safeSetDoc(["mafiaRecords", MAFIA_DEFAULT_RECORD_NAME], { data: [], lastUpdated: new Date() });
         await safeSetDoc(["mafiaMetadata", MAFIA_CURRENT_RECORD_KEY], { current: MAFIA_DEFAULT_RECORD_NAME });
         localStorage.removeItem('mafia_temp');
+        try{ localStorage.removeItem('mafia_temp_' + MAFIA_DEFAULT_RECORD_NAME); }catch(e){}
         await mafia_updateRecordSelector(MAFIA_DEFAULT_RECORD_NAME);
         showToast('✅ تم المسح');
       }catch(e){ console.error(e); showToast('❌ حدث خطأ'); }
@@ -379,12 +448,14 @@
       try{
         const inputs = document.querySelectorAll('#mafiaInputFieldsContainer input[type="text"]');
         const arr = Array.from(inputs).map(i=>i.value);
-        // حفظ مؤقت في localStorage لأمان (cache)
-        localStorage.setItem('mafia_temp', JSON.stringify(arr));
-        // حفظ إلى السجل الحالي في Firebase (تأجيل لتقليل عمليات الكتابة)
-        const currentDoc = await safeGetDoc(["mafiaMetadata", MAFIA_CURRENT_RECORD_KEY]);
-        const currentName = currentDoc.exists()? currentDoc.data().current : MAFIA_DEFAULT_RECORD_NAME;
-        await safeSetDoc(["mafiaRecords", currentName], { data: arr, lastUpdated: new Date() });
+
+        // Save per-record temp cache (to avoid cross-record override)
+        const key = 'mafia_temp_' + (currentRecordNameLocal || MAFIA_DEFAULT_RECORD_NAME);
+        localStorage.setItem(key, JSON.stringify(arr));
+
+        // Save to Firestore using local current record name (avoids race)
+        const saveTo = currentRecordNameLocal || MAFIA_DEFAULT_RECORD_NAME;
+        await safeSetDoc(["mafiaRecords", saveTo], { data: arr, lastUpdated: new Date() });
       }catch(e){ console.error('debouncedSave', e); }
     }, 900);
 
