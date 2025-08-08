@@ -229,68 +229,81 @@
     // --------------------------- Records CRUD ---------------------------
     async function mafia_saveRecord(recordName){
       const inputElements = document.querySelectorAll('#mafiaInputFieldsContainer input[type="text"]');
-      const dataToSave = Array.from(inputElements).map(i=>i.value);
-      try{
-        await safeSetDoc(["mafiaRecords", recordName], { data: dataToSave, lastUpdated: new Date() });
-        // update metadata names list
-        let recordNames = await mafia_getRecordNamesFromFirebase();
-        if(!recordNames.includes(recordName)){
-          recordNames.push(recordName);
-          await safeSetDoc(["mafiaMetadata", MAFIA_RECORD_NAMES_KEY], { names: recordNames });
-        }
-        await safeSetDoc(["mafiaMetadata", MAFIA_CURRENT_RECORD_KEY], { current: recordName });
-        await mafia_updateRecordSelector(recordName);
+      const dataToSave = Array.from(inputElements).map(i => i.value);
+      try {
+        const isDefault = recordName === MAFIA_DEFAULT_RECORD_NAME;
+        const docPath = isDefault ? ["mafiaDefaultRecord", "default"] : ["mafiaRecords", recordName];
 
-        // keep local name and remove only that record's temp cache (since it's now saved to Firestore)
+        await safeSetDoc(docPath, { data: dataToSave, lastUpdated: new Date() });
+
+        if (!isDefault) {
+          let recordNames = await mafia_getRecordNamesFromFirebase();
+          if (!recordNames.includes(recordName)) {
+            recordNames.push(recordName);
+            await safeSetDoc(["mafiaMetadata", MAFIA_RECORD_NAMES_KEY], { names: recordNames });
+          }
+          await safeSetDoc(["mafiaMetadata", MAFIA_CURRENT_RECORD_KEY], { current: recordName });
+          await mafia_updateRecordSelector(recordName);
+        }
+
         currentRecordNameLocal = recordName;
-        try{ localStorage.removeItem('mafia_temp_' + recordName); }catch(e){}
+        try { localStorage.removeItem('mafia_temp_' + recordName); } catch (e) {}
 
         return true;
-      }catch(e){ console.error('saveRecord', e); showToast('❌ فشل حفظ السجل'); return false; }
+      } catch (e) {
+        console.error('saveRecord', e);
+        showToast('❌ فشل حفظ السجل');
+        return false;
+      }
     }
 
-    async function mafia_loadRecord(recordName){
-      const container = el('mafiaInputFieldsContainer'); container.innerHTML='';
-      try{
-        const docSnap = await safeGetDoc(["mafiaRecords", recordName]);
-        if(docSnap.exists()){
+    async function mafia_loadRecord(recordName) {
+      const container = el('mafiaInputFieldsContainer');
+      container.innerHTML = '';
+      try {
+        const isDefault = recordName === MAFIA_DEFAULT_RECORD_NAME;
+        const docPath = isDefault ? ["mafiaDefaultRecord", "default"] : ["mafiaRecords", recordName];
+
+        const docSnap = await safeGetDoc(docPath);
+        if (docSnap.exists()) {
           const dataArray = docSnap.data().data || [];
           mafia_inputCounter = 0;
-          for(const v of dataArray) mafia_addInputField(v, false);
-        }else{
+          for (const v of dataArray) mafia_addInputField(v, false);
+        } else {
           mafia_inputCounter = 0;
           mafia_addInputField('', false);
         }
         mafia_updateInputNumbers();
-        await safeSetDoc(["mafiaMetadata", MAFIA_CURRENT_RECORD_KEY], { current: recordName });
-        mafia_updateRecordSelector(recordName);
 
-        // set local current name to avoid reading from Firestore repeatedly
+        if (!isDefault) {
+          await safeSetDoc(["mafiaMetadata", MAFIA_CURRENT_RECORD_KEY], { current: recordName });
+          mafia_updateRecordSelector(recordName);
+        }
+
         currentRecordNameLocal = recordName;
-
-        // clear only the per-record temp cache (we keep other records intact)
-        try{ localStorage.removeItem('mafia_temp_' + recordName); }catch(e){}
+        try { localStorage.removeItem('mafia_temp_' + recordName); } catch (e) {}
 
         return true;
-      }catch(e){
+      } catch (e) {
         console.error('loadRecord', e);
         mafia_inputCounter = 0;
         mafia_addInputField('', false);
         showToast('❌ فشل تحميل السجل — سيتم استعادة الكاش إن وُجد');
-        // try to restore per-record cache (only if exists)
-        try{
+        try {
           const tmp = localStorage.getItem('mafia_temp_' + recordName);
-          if(tmp){
+          if (tmp) {
             const arr = JSON.parse(tmp);
-            if(Array.isArray(arr) && arr.length>0){
-              document.getElementById('mafiaInputFieldsContainer').innerHTML='';
-              mafia_inputCounter=0;
-              arr.forEach(v=>mafia_addInputField(v,false));
+            if (Array.isArray(arr) && arr.length > 0) {
+              document.getElementById('mafiaInputFieldsContainer').innerHTML = '';
+              mafia_inputCounter = 0;
+              arr.forEach(v => mafia_addInputField(v, false));
               mafia_updateInputNumbers();
               showToast('⚠ تم استعادة البيانات من الكاش المحلي');
             }
           }
-        }catch(er){ console.error('restore cache', er); }
+        } catch (er) {
+          console.error('restore cache', er);
+        }
         return false;
       }
     }
