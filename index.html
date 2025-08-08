@@ -637,6 +637,45 @@
       showToast('✅ تم تحميل الكود');
     };
 
+    /**
+     * New function to handle editing a saved profile code.
+     */
+    const editProfileCode = async (oldCodeName, oldCode) => {
+        let saved = await getSavedCodes();
+        const newCodeName = prompt(`تعديل اسم الكود "${oldCodeName}" إلى:`, oldCodeName);
+        if (newCodeName === null) return; // User cancelled
+        const newCodeValue = prompt(`تعديل قيمة الكود "${oldCode}" إلى:`, oldCode);
+        if (newCodeValue === null) return; // User cancelled
+        
+        const newNameTrimmed = newCodeName.trim();
+        const newCodeTrimmed = newCodeValue.trim();
+
+        if (newNameTrimmed === '' || newCodeTrimmed === '') {
+            showToast('⚠ يجب إدخال اسم وقيمة غير فارغين');
+            return;
+        }
+
+        // Check if the new name is already in use by another code
+        const isNameUsed = saved.some(s => s.name === newNameTrimmed && s.name !== oldCodeName);
+        if (isNameUsed) {
+            showToast('⚠ الاسم الجديد مستخدم بالفعل');
+            return;
+        }
+
+        // Find and update the code
+        const updatedSaved = saved.map(item => {
+            if (item.name === oldCodeName) {
+                return { name: newNameTrimmed, code: newCodeTrimmed };
+            }
+            return item;
+        });
+
+        if (await saveCodes(updatedSaved)) {
+            await renderSavedCodes();
+            showToast('✅ تم تحديث الكود');
+        }
+    };
+
     const renderSavedCodes = async (filter = '') => {
       const saved = await getSavedCodes();
       const out = el('savedCodesOutput');
@@ -671,13 +710,14 @@
         
         const loadBtn = createButton('تحميل', 'btn ghost', () => loadProfileCode(item.code));
         const copyBtn = createButton('نسخ', 'btn', () => copyToClipboard(item.code, copyBtn));
+        const editBtn = createButton('تعديل', 'btn ghost', () => editProfileCode(item.name, item.code)); // الزر الجديد
         const delBtn = createButton('مسح', 'btn ghost', async () => {
           wrap.classList.add('fade-out');
           await wait(220);
           deleteProfileCode(item.name);
         });
         
-        right.append(loadBtn, copyBtn, delBtn);
+        right.append(loadBtn, copyBtn, editBtn, delBtn); // إضافة الزر الجديد هنا
         wrap.append(left, right);
         frag.appendChild(wrap);
       }
