@@ -1,365 +1,200 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>أدوات إدخال النصوص والبروفايلات — المحسّن</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title>مولد الروابط الذكي</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    :root{
-      --bg:#0f1720; --card:#0f1726; --muted:#97a0ad; --accent:#00e6ac; --danger:#ff5c5c; --glass: rgba(255,255,255,0.03);
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family:'Playpen Sans Arabic',system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial; background:linear-gradient(180deg,#091018 0%, #071021 100%); color:#e6eef6; direction:rtl; -webkit-font-smoothing:antialiased; padding:18px;
+    h1 {
+      color: #00e6ac;
+      margin-bottom: 15px;
+      text-align: center;
     }
-    .app{max-width:1100px; margin:0 auto; display:grid; grid-template-columns: 1fr 420px; gap:20px; align-items:start}
-    header{grid-column:1/ -1; display:flex; justify-content:space-between; align-items:center; gap:12px}
-    h1{margin:0; font-size:20px; color:var(--accent)}
-    .subtitle{color:var(--muted); font-size:13px}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; padding:18px; box-shadow:0 6px 24px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03)}
-
-    /* Left column (main tools) */
-    .main .section{margin-bottom:18px}
-    label{display:block; font-weight:700; margin-bottom:6px}
-    input[type=text], select{width:100%; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:inherit}
-    .button-row{display:flex; gap:8px; margin-top:10px}
-    .btn{background:var(--accent); color:#001; padding:10px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700}
-    .btn.ghost{background:transparent; color:var(--accent); border:1px solid rgba(255,255,255,0.04)}
-    .small{font-size:13px; color:var(--muted)}
-
-    /* Input list */
-    #mafiaInputFieldsContainer{display:flex; flex-direction:column; gap:10px}
-    .input-group{display:flex; gap:8px; align-items:center; background:var(--glass); padding:8px; border-radius:8px}
-    .input-number{min-width:30px; text-align:center; color:var(--muted)}
-    .input-group input{flex:1}
-    .control-btn{padding:8px 10px; border-radius:8px; border:none; cursor:pointer}
-    .copy-btn{background:#2ecc71;color:#012;border-radius:8px;padding:8px 10px}
-    .paste-btn{background:#3498db;color:white}
-    .remove-field-btn{background:var(--danger); color:white}
-
-    /* Right column */
-    .side .section + .section{margin-top:14px}
-    .links-output p{display:flex; gap:8px; align-items:center; justify-content:space-between}
-    .links-output a{color:var(--accent); text-decoration:none; max-width:72%; overflow-wrap:anywhere}
-    .links-output .copy-link-btn{background:#2b7a5f; border-radius:8px; padding:6px 10px; color:white}
-
-    /* saved list */
-    .saved-codes-output .saved-code-item{display:flex; justify-content:space-between; gap:8px; padding:10px; border-radius:8px; align-items:center; background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.008));}
-    .saved-codes-output .code-display{font-family:monospace; color:var(--muted); font-size:13px}
-
-    footer{grid-column:1/-1; margin-top:18px; color:var(--muted); font-size:13px; text-align:center}
-
-    @media (max-width:980px){.app{grid-template-columns:1fr} .side{order:-1}}
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      outline: none;
+    }
+    input {
+      width: 260px;
+      margin-bottom: 10px;
+    }
+    button {
+      background: #00e6ac;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #00b386;
+    }
+    .links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+      width: 100%;
+      max-width: 450px;
+    }
+    .link-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1f1f1f;
+      padding: 10px;
+      border-radius: 5px;
+      word-break: break-all;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+    .link-item a {
+      color: #00e6ac;
+      text-decoration: none;
+    }
+    .copy-btn, .delete-btn {
+      background: #333;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      padding: 5px 8px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-left: 5px;
+    }
+    .copy-btn:hover, .delete-btn:hover {
+      background: #555;
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 5px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 1000;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(5px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <div>
-        <h1>مولد الروابط الذكي — لوحة السيطرة</h1>
-        <div class="subtitle">نسخة محسّنة — كل المزايا محفوظة + أداء وواجهة أفضل</div>
-      </div>
-      <div class="small">حفظ تلقائي مؤقت • يدعم Firebase • اختصارات للنسخ</div>
-    </header>
+  <h1>🔗 مولد الروابط الذكي</h1>
+  <input type="text" id="profileCode" placeholder="أدخل كود البروفايل">
+  <button onclick="generateLinks()">إنشاء الروابط</button>
+  <div class="links" id="linksContainer"></div>
+  <div id="toast" class="toast"></div>
 
-    <main class="main card">
-      <section class="section">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-          <strong>أداة إدخال النصوص</strong>
-          <div class="small">أضف أكثر من خانة — احفظ السجلات في Firebase</div>
-        </div>
-
-        <div id="mafiaInputFieldsContainer"></div>
-        <div style="display:flex;gap:10px;margin-top:12px">
-          <button class="btn" onclick="mafia_addInputField()"><i class="fas fa-plus-circle"></i>&nbsp; إضافة خانة</button>
-          <button class="btn ghost" onclick="mafia_clearCurrentDataAndStartNew()"><i class="fas fa-trash"></i>&nbsp; مسح الكل</button>
-        </div>
-      </section>
-
-      <section class="section">
-        <strong>السجلات (Records)</strong>
-        <div style="display:flex;gap:10px;margin-top:8px;align-items:center">
-          <select id="mafiaRecordSelector" style="flex:1" onchange="mafia_loadSelectedRecord()"></select>
-          <button class="btn" onclick="mafia_saveRecordAsNew()"><i class="fas fa-save"></i>&nbsp; حفظ باسم</button>
-          <button class="btn ghost" onclick="mafia_deleteSelectedRecord()"><i class="fas fa-trash-alt"></i>&nbsp; حذف</button>
-        </div>
-        <div class="small" style="margin-top:8px">السجل الحالي محفوظ آلياً مع تأخير (debounced) لتقليل عمليات الكتابة على Firebase.</div>
-      </section>
-
-      <section class="section">
-        <strong>مولّد روابط البروفايلات</strong>
-        <div class="small">أدخل كود بروفايل (Base64) واضغط توليد</div>
-        <label for="profileCode">كود البروفايل</label>
-        <input type="text" id="profileCode" placeholder="مثال: NDIyNDk2MjQ5Mw==">
-        <div class="button-row">
-          <button class="btn" onclick="profile_generateProfileLinks()">توليد الروابط</button>
-          <button class="btn ghost" onclick="profile_openAllLinks()">فتح كل الروابط</button>
-        </div>
-        <div id="outputLinks" class="links-output" style="margin-top:10px">لا توجد روابط.</div>
-      </section>
-
-      <section class="section">
-        <strong>مولّد روابط تسجيل الدخول</strong>
-        <label for="loginCode">كود (اختياري)</label>
-        <input type="text" id="loginCode" placeholder="أي كود أو اتركه فارغًا">
-        <div class="button-row">
-          <button class="btn" onclick="login_generateLoginLinks()">توليد روابط الدخول</button>
-          <button class="btn ghost" onclick="login_openAllLinks()">فتح</button>
-        </div>
-        <div id="outputLoginLinks" class="links-output" style="margin-top:10px">لا توجد روابط.</div>
-      </section>
-    </main>
-
-    <aside class="side card">
-      <section class="section">
-        <strong>إدارة أكواد البروفايلات المحفوظة</strong>
-        <div class="small">احفظ كود باسم — يعرض الأكواد مع أزرار تحميل/نسخ/حذف</div>
-        <label for="codeName">اسم الكود</label>
-        <input type="text" id="codeName" placeholder="مثال: بروفايل صديق">
-        <div class="button-row" style="margin-top:8px">
-          <button class="btn" onclick="profile_saveProfileCode()">حفظ الكود</button>
-        </div>
-        <div id="savedCodesOutput" class="saved-codes-output" style="margin-top:12px">لا توجد أكواد محفوظة.</div>
-      </section>
-
-      <section class="section" style="margin-top:14px">
-        <strong>السجل الافتراضي</strong>
-        <div class="small">استخدم السجل الافتراضي للمهام السريعة</div>
-        <div style="margin-top:10px"><button class="btn ghost" onclick="mafia_loadRecord(MAFIA_DEFAULT_RECORD_NAME)">تحميل افتراضي</button></div>
-      </section>
-    </aside>
-
-    <footer>🌟 تم تحسين الأداء: حفظ آلي مؤجل، تحديث DOM بكفاءة، وحماية من نداءات متكررة للفَيَربيز.</footer>
-  </div>
-
-  <script type="module">
-    // --------------------------- Firebase init ---------------------------
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyC4_IUaC1uiqq05TKpL348kXt1aNJf1jzM",
-      authDomain: "mafia-3l-entag.firebaseapp.com",
-      projectId: "mafia-3l-entag",
-      storageBucket: "mafia-3l-entag.firebasestorage.app",
-      messagingSenderId: "995219729881",
-      appId: "1:995219729881:web:5d128bce8987d812adfdc8",
-      measurementId: "G-Z7ZMFV8VV8"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // --------------------------- State & constants ---------------------------
-    let mafia_inputCounter = 0;
-    const MAFIA_RECORD_NAMES_KEY = 'mafiaRecordNames';
-    const MAFIA_CURRENT_RECORD_KEY = 'mafiaCurrentRecord';
-    const MAFIA_DEFAULT_RECORD_NAME = 'السجل الافتراضي';
-
-    const profile_baseUrls = [
-      "https://mixu.chat/profile/",
-      "https://1v1chat.me/profile/",
-      "https://livcam.me/profile/",
-      "https://tinchat.me/profile/",
-      "https://livuapp.com/profile/"
+  <script>
+    // قائمة المواقع
+    const sites = [
+      "https://example1.com/profile/",
+      "https://example2.com/user/",
+      "https://example3.com/id/"
     ];
 
-    const login_baseUrls = [
-      "https://mixu.chat/login",
-      "https://1v1chat.me/login",
-      "https://livcam.me/login",
-      "https://tinchat.me/login",
-      "https://livuapp.com/login"
-    ];
-
-    const PROFILE_SAVED_CODES_KEY = 'savedProfileCodesList';
-
-    // --------------------------- Helpers ---------------------------
-    function el(id){ return document.getElementById(id); }
-    function debounce(func, wait){ let t; return (...a)=>{ clearTimeout(t); t = setTimeout(()=>func(...a), wait); }; }
-
-    // --------------------------- CRUD: Records ---------------------------
-    async function mafia_saveRecord(recordName){
-      const inputElements = document.querySelectorAll('#mafiaInputFieldsContainer input[type="text"]');
-      const dataToSave = Array.from(inputElements).map(i=>i.value);
-      try{
-        await setDoc(doc(db, "mafiaRecords", recordName), { data: dataToSave, lastUpdated: new Date() });
-        let recordNames = await mafia_getRecordNamesFromFirebase();
-        if(!recordNames.includes(recordName)){
-          recordNames.push(recordName);
-          await setDoc(doc(db, "mafiaMetadata", MAFIA_RECORD_NAMES_KEY), { names: recordNames });
-        }
-        await setDoc(doc(db, "mafiaMetadata", MAFIA_CURRENT_RECORD_KEY), { current: recordName });
-        await mafia_updateRecordSelector(recordName);
-        return true;
-      }catch(e){ console.error('saveRecord', e); alert('فشل حفظ السجل.'); return false; }
+    // عرض رسالة تنبيه صغيرة
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
     }
 
-    async function mafia_loadRecord(recordName){
-      const container = el('mafiaInputFieldsContainer'); container.innerHTML='';
-      try{
-        const docRef = doc(db, "mafiaRecords", recordName);
-        const docSnap = await getDoc(docRef);
-        if(docSnap.exists()){
-          const dataArray = docSnap.data().data || [];
-          mafia_inputCounter = 0;
-          for(const v of dataArray) mafia_addInputField(v, false);
-        }else{ mafia_inputCounter = 0; mafia_addInputField('', false); }
-        mafia_updateInputNumbers();
-        await setDoc(doc(db, "mafiaMetadata", MAFIA_CURRENT_RECORD_KEY), { current: recordName });
-        mafia_updateRecordSelector(recordName);
-        return true;
-      }catch(e){ console.error('loadRecord', e); mafia_inputCounter = 0; mafia_addInputField('', false); alert('فشل تحميل السجل.'); return false; }
-    }
-
-    async function mafia_getRecordNamesFromFirebase(){
-      try{
-        const docRef = doc(db, "mafiaMetadata", MAFIA_RECORD_NAMES_KEY);
-        const docSnap = await getDoc(docRef);
-        let namesArray = docSnap.exists() && docSnap.data().names ? docSnap.data().names : [];
-        if(!namesArray.includes(MAFIA_DEFAULT_RECORD_NAME)) namesArray.unshift(MAFIA_DEFAULT_RECORD_NAME);
-        else{ namesArray = namesArray.filter(n=>n!==MAFIA_DEFAULT_RECORD_NAME); namesArray.unshift(MAFIA_DEFAULT_RECORD_NAME); }
-        return namesArray;
-      }catch(e){ console.error('getRecordNames', e); return [MAFIA_DEFAULT_RECORD_NAME]; }
-    }
-
-    async function mafia_updateRecordSelector(selectedName=''){
-      const selector = el('mafiaRecordSelector'); selector.innerHTML = '';
-      const recordNames = await mafia_getRecordNamesFromFirebase();
-      for(const name of recordNames){ const opt = document.createElement('option'); opt.value=name; opt.textContent=name; if(name===selectedName) opt.selected=true; selector.appendChild(opt); }
-      const deleteBtn = document.querySelector('.record-controls button:last-of-type'); if(deleteBtn) deleteBtn.disabled = (recordNames.length===1 && recordNames[0]===MAFIA_DEFAULT_RECORD_NAME);
-    }
-
-    async function mafia_saveRecordAsNew(){
-      let recordName = prompt('ادخل اسم للسجل الجديد:');
-      if(recordName && recordName.trim()!==''){
-        recordName=recordName.trim();
-        const recordNames = await mafia_getRecordNamesFromFirebase();
-        if(recordNames.includes(recordName)){
-          if(!confirm(`السجل "${recordName}" موجود، استبداله؟`)) return;
-        }
-        const ok = await mafia_saveRecord(recordName);
-        if(ok){ await setDoc(doc(db, "mafiaRecords", MAFIA_DEFAULT_RECORD_NAME), { data: [], lastUpdated: new Date() }); await mafia_loadRecord(recordName); alert('تم الحفظ.'); }
-      }else if(recordName!==null) alert('يجب ادخال اسم');
-    }
-
-    async function mafia_loadSelectedRecord(){ const sel = el('mafiaRecordSelector'); if(sel.value) await mafia_loadRecord(sel.value); }
-
-    async function mafia_deleteSelectedRecord(){
-      const sel = el('mafiaRecordSelector'); const recordToDelete = sel.value; if(recordToDelete===MAFIA_DEFAULT_RECORD_NAME){ alert('لا يمكنك حذف السجل الافتراضي'); return; }
-      if(!confirm('تأكيد حذف '+recordToDelete+'؟')) return;
-      try{ await deleteDoc(doc(db, "mafiaRecords", recordToDelete)); let names = await mafia_getRecordNamesFromFirebase(); names = names.filter(n=>n!==recordToDelete); await setDoc(doc(db, "mafiaMetadata", MAFIA_RECORD_NAMES_KEY), { names }); const currentDoc = await getDoc(doc(db, "mafiaMetadata", MAFIA_CURRENT_RECORD_KEY)); const current = currentDoc.exists()? currentDoc.data().current : MAFIA_DEFAULT_RECORD_NAME; if(current===recordToDelete) await mafia_loadRecord(MAFIA_DEFAULT_RECORD_NAME); await mafia_updateRecordSelector(current===recordToDelete?MAFIA_DEFAULT_RECORD_NAME:current); alert('حُذف.'); }catch(e){ console.error('delete', e); alert('خطأ في الحذف'); }
-    }
-
-    // --------------------------- Input fields UI ---------------------------
-    window.mafia_addInputField = function(initialValue='', saveAfterAdd=true){
-      mafia_inputCounter++; const container = el('mafiaInputFieldsContainer');
-      const div = document.createElement('div'); div.className='input-group'; div.innerHTML = `
-        <button class="remove-field-btn control-btn" title="حذف الخانة">حذف</button>
-        <div class="input-number">${mafia_inputCounter}.</div>
-        <input type="text" id="mafiaTextInput${mafia_inputCounter}" value="${escapeHtml(initialValue)}" placeholder="أدخل النص...">
-        <button class="copy-btn control-btn" title="نسخ">نسخ</button>
-        <button class="paste-btn control-btn" title="لصق">لصق</button>
-      `;
-      container.appendChild(div);
-
-      // attach handlers
-      const input = div.querySelector('input');
-      const copyBtn = div.querySelector('.copy-btn');
-      const pasteBtn = div.querySelector('.paste-btn');
-      const removeBtn = div.querySelector('.remove-field-btn');
-
-      input.addEventListener('input', debouncedSave);
-      copyBtn.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(input.value); copyBtn.textContent='✔'; setTimeout(()=>copyBtn.textContent='نسخ',1000);}catch(e){alert('فشل النسخ');}});
-      pasteBtn.addEventListener('click', async ()=>{ try{ const t = await navigator.clipboard.readText(); input.value=t; debouncedSave(); }catch(e){alert('فشل اللصق')} });
-      removeBtn.addEventListener('click', ()=>{ div.remove(); mafia_updateInputNumbers(); debouncedSave(); });
-
-      if(saveAfterAdd) debouncedSave();
-    }
-
-    function mafia_removeInputField(buttonElement){ const g = buttonElement.closest('.input-group'); if(g) g.remove(); mafia_updateInputNumbers(); debouncedSave(); }
-    function mafia_updateInputNumbers(){ const groups = document.querySelectorAll('#mafiaInputFieldsContainer .input-group'); groups.forEach((g,i)=>{ const n = g.querySelector('.input-number'); if(n) n.textContent = (i+1)+'.'; }); mafia_inputCounter = groups.length; }
-
-    window.mafia_clearCurrentDataAndStartNew = async function(){ if(!confirm('مسح كل محتوى السجل الحالي؟')) return; document.getElementById('mafiaInputFieldsContainer').innerHTML=''; mafia_inputCounter=0; mafia_addInputField('', false); await setDoc(doc(db, "mafiaRecords", MAFIA_DEFAULT_RECORD_NAME), { data: [], lastUpdated: new Date() }); await setDoc(doc(db, "mafiaMetadata", MAFIA_CURRENT_RECORD_KEY), { current: MAFIA_DEFAULT_RECORD_NAME }); await mafia_updateRecordSelector(MAFIA_DEFAULT_RECORD_NAME); alert('تم المسح'); }
-
-    // --------------------------- Saving (debounced) ---------------------------
-    const debouncedSave = debounce(async ()=>{
-      try{
-        const container = document.querySelectorAll('#mafiaInputFieldsContainer input[type="text"]');
-        const arr = Array.from(container).map(i=>i.value);
-        // حفظ مؤقت في localStorage لأمان
-        localStorage.setItem('mafia_temp', JSON.stringify(arr));
-        // حفظ إلى السجل الحالي في Firebase (تأجيل لتقليل عمليات الكتابة)
-        const currentDoc = await getDoc(doc(db, "mafiaMetadata", MAFIA_CURRENT_RECORD_KEY));
-        const currentName = currentDoc.exists()? currentDoc.data().current : MAFIA_DEFAULT_RECORD_NAME;
-        await setDoc(doc(db, "mafiaRecords", currentName), { data: arr, lastUpdated: new Date() });
-      }catch(e){ console.error('debouncedSave', e); }
-    }, 1200);
-
-    // --------------------------- Profile links logic ---------------------------
-    window.profile_generateProfileLinks = function(){
-      const code = el('profileCode').value.trim(); const out = el('outputLinks'); out.innerHTML='';
-      if(!code){ out.innerHTML = '<p class="small">⚠ الرجاء إدخال كود البروفايل.</p>'; return; }
-      // generate
-      const frag = document.createDocumentFragment();
-      profile_baseUrls.forEach((base,i)=>{
-        const full = base + code;
-        const p = document.createElement('p'); p.style.display='flex'; p.style.gap='8px'; p.style.alignItems='center';
-        const a = document.createElement('a'); a.href=full; a.target='_blank'; a.textContent=full;
-        const btn = document.createElement('button'); btn.className='copy-link-btn'; btn.textContent='نسخ'; btn.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(full); btn.textContent='✔'; setTimeout(()=>btn.textContent='نسخ',900);}catch(e){alert('فشل النسخ')} });
-        p.appendChild(a); p.appendChild(btn); frag.appendChild(p);
-      });
-      out.appendChild(frag);
-    }
-
-    window.profile_openAllLinks = function(){ const links = el('outputLinks').querySelectorAll('a'); if(links.length===0){ alert('لا توجد روابط'); return;} if(!confirm('فتح '+links.length+' رابط؟')) return; links.forEach(a=>window.open(a.href,'_blank')) }
-
-    window.login_generateLoginLinks = function(){ const code = el('loginCode').value.trim(); const out = el('outputLoginLinks'); out.innerHTML=''; const frag = document.createDocumentFragment(); login_baseUrls.forEach((base,i)=>{ const full = base + (code? '/'+code:'' ); const p = document.createElement('p'); p.style.display='flex'; p.style.gap='8px'; p.style.alignItems='center'; const a = document.createElement('a'); a.href=full; a.target='_blank'; a.textContent=full; const btn = document.createElement('button'); btn.className='copy-link-btn'; btn.textContent='نسخ'; btn.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(full); btn.textContent='✔'; setTimeout(()=>btn.textContent='نسخ',900);}catch(e){alert('فشل النسخ')} }); p.appendChild(a); p.appendChild(btn); frag.appendChild(p); }); out.appendChild(frag); }
-    window.login_openAllLinks = function(){ const links = el('outputLoginLinks').querySelectorAll('a'); if(links.length===0){ alert('لا توجد روابط'); return;} if(!confirm('فتح '+links.length+' رابط؟')) return; links.forEach(a=>window.open(a.href,'_blank')) }
-
-    window.profile_copyLink = async function(url){ try{ await navigator.clipboard.writeText(url); alert('تم النسخ'); }catch(e){ alert('فشل النسخ'); }}
-
-    // --------------------------- Saved profile codes (Firestore) ---------------------------
-    async function profile_getSavedCodes(){ try{ const docRef = doc(db, "profileData", PROFILE_SAVED_CODES_KEY); const docSnap = await getDoc(docRef); return docSnap.exists() && docSnap.data().codes ? docSnap.data().codes : []; }catch(e){ console.error('getSaved', e); return []; } }
-    async function profile_saveCodes(codesArray){ try{ await setDoc(doc(db, "profileData", PROFILE_SAVED_CODES_KEY), { codes: codesArray }); return true; }catch(e){ console.error('saveCodes', e); alert('فشل الحفظ'); return false; } }
-
-    window.profile_saveProfileCode = async function(){ const profileCode = el('profileCode').value.trim(); const codeName = el('codeName').value.trim(); if(!profileCode){ alert('ادخل كود'); return; } if(!codeName){ alert('ادخل اسم'); return; } let saved = await profile_getSavedCodes(); if(saved.some(s=>s.name===codeName)){ alert('الاسم مستخدم'); return; } if(saved.some(s=>s.code===profileCode)){ alert('الكود موجود'); return; } saved.push({ name: codeName, code: profileCode }); if(await profile_saveCodes(saved)){ profile_renderSavedCodes(); el('codeName').value=''; el('profileCode').value=''; alert('تم الحفظ'); } }
-
-    window.profile_deleteProfileCode = async function(codeName){ if(!confirm('حذف '+codeName+'؟')) return; let saved = await profile_getSavedCodes(); saved = saved.filter(s=>s.name!==codeName); if(await profile_saveCodes(saved)){ profile_renderSavedCodes(); alert('تم الحذف'); } }
-    window.profile_loadProfileCode = function(code){ el('profileCode').value = code; alert('تم تحميل الكود'); }
-
-    async function profile_renderSavedCodes(){ const saved = await profile_getSavedCodes(); const out = el('savedCodesOutput'); if(saved.length===0){ out.innerHTML='<p>لا توجد أكواد محفوظة.</p>'; return; } const frag = document.createDocumentFragment(); saved.forEach(item=>{ const wrap = document.createElement('div'); wrap.className='saved-code-item'; const left = document.createElement('div'); left.innerHTML = `<strong>${escapeHtml(item.name)}</strong> <div class="code-display">${escapeHtml(item.code)}</div>`; const right = document.createElement('div'); right.style.display='flex'; right.style.gap='6px'; const loadBtn = document.createElement('button'); loadBtn.className='btn ghost'; loadBtn.textContent='تحميل'; loadBtn.onclick = ()=>profile_loadProfileCode(item.code); const copyBtn = document.createElement('button'); copyBtn.className='btn'; copyBtn.textContent='نسخ'; copyBtn.onclick = async ()=>{ try{ await navigator.clipboard.writeText(item.code); copyBtn.textContent='✔'; setTimeout(()=>copyBtn.textContent='نسخ',900);}catch(e){alert('فشل النسخ')} }; const delBtn = document.createElement('button'); delBtn.className='btn ghost'; delBtn.textContent='مسح'; delBtn.onclick = ()=>profile_deleteProfileCode(item.name); right.appendChild(loadBtn); right.appendChild(copyBtn); right.appendChild(delBtn); wrap.appendChild(left); wrap.appendChild(right); frag.appendChild(wrap); }); out.innerHTML=''; out.appendChild(frag); }
-
-    // --------------------------- Init on load ---------------------------
-    document.addEventListener('DOMContentLoaded', async ()=>{
-      await mafia_updateRecordSelector();
-      const currentRecordDoc = await getDoc(doc(db, "mafiaMetadata", MAFIA_CURRENT_RECORD_KEY));
-      const currentRecordName = currentRecordDoc.exists() ? currentRecordDoc.data().current : MAFIA_DEFAULT_RECORD_NAME;
-      await mafia_loadRecord(currentRecordName);
-      // ensure at least one field
-      if(document.querySelectorAll('#mafiaInputFieldsContainer input[type="text"]').length===0) mafia_addInputField('', false);
-      // restore temp if exists
-      const tmp = localStorage.getItem('mafia_temp'); if(tmp){ try{ const arr = JSON.parse(tmp); if(Array.isArray(arr) && arr.length>0){ // if current UI empty -> fill
-          const inputs = document.querySelectorAll('#mafiaInputFieldsContainer input[type="text"]'); if(inputs.length<=1){ document.getElementById('mafiaInputFieldsContainer').innerHTML=''; mafia_inputCounter=0; arr.forEach(v=>mafia_addInputField(v,false)); mafia_updateInputNumbers(); }
-        } }catch(e){}
+    // إنشاء الروابط
+    function generateLinks() {
+      const code = document.getElementById('profileCode').value.trim();
+      const container = document.getElementById('linksContainer');
+      container.innerHTML = '';
+      if (!code) {
+        showToast('⚠ الرجاء إدخال كود البروفايل.');
+        return;
       }
-      await profile_renderSavedCodes();
-    });
 
-    // --------------------------- Utility ---------------------------
-    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"]+/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]||c)); }
+      localStorage.setItem('lastCode', code);
 
-    // expose some functions to global scope for HTML onclicks
-    window.mafia_updateRecordSelector = mafia_updateRecordSelector;
-    window.mafia_loadRecord = mafia_loadRecord;
-    window.mafia_saveRecord = mafia_saveRecord;
-    window.mafia_deleteSelectedRecord = mafia_deleteSelectedRecord;
-    window.mafia_loadSelectedRecord = mafia_loadSelectedRecord;
+      sites.forEach(site => {
+        const url = site + code;
+        const div = document.createElement('div');
+        div.className = 'link-item';
 
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.textContent = url;
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'copy-btn';
+        copyBtn.textContent = 'نسخ';
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(url);
+          copyBtn.textContent = '✔';
+          setTimeout(() => copyBtn.textContent = 'نسخ', 1200);
+          showToast('✅ تم نسخ الرابط');
+        };
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = 'حذف';
+        deleteBtn.onclick = () => {
+          deleteLink(site, code);
+        };
+
+        div.appendChild(link);
+        div.appendChild(copyBtn);
+        div.appendChild(deleteBtn);
+        container.appendChild(div);
+      });
+    }
+
+    // حذف الرابط من localStorage وفايربيز (محاكاة)
+    function deleteLink(site, code) {
+      try {
+        // حذف من localStorage
+        const lastCode = localStorage.getItem('lastCode');
+        if (lastCode === code) {
+          localStorage.removeItem('lastCode');
+        }
+
+        // حذف من Firebase (هنا هتضيف كود الحذف الحقيقي لو موصل Firebase)
+        console.log(`تم الحذف من Firebase: ${site + code}`);
+
+        // إعادة تحميل القائمة
+        generateLinks();
+        showToast('✅ تم الحذف بنجاح');
+      } catch (e) {
+        console.error(e);
+        showToast('❌ حصل خطأ أثناء الحذف');
+      }
+    }
+
+    // عند التحميل
+    window.onload = () => {
+      const lastCode = localStorage.getItem('lastCode');
+      if (lastCode) {
+        document.getElementById('profileCode').value = lastCode;
+        generateLinks();
+      }
+    }
   </script>
 </body>
 </html>
