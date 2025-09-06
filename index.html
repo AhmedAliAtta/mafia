@@ -27,11 +27,10 @@
     h1{margin:0; font-size:20px; color:var(--accent)}
     .subtitle{color:var(--muted); font-size:13px}
     .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px; padding:18px; box-shadow:0 6px 24px rgba(2,6,23,0.6); border:1px solid rgba(255,255,255,0.03)}
-
-    /* Left column (main tools) */
+    
     .main .section{margin-bottom:18px}
     label{display:block; font-weight:700; margin-bottom:6px}
-    input[type=text], select{width:100%; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:inherit}
+    input[type=text], input[type=number], select{width:100%; padding:10px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:inherit}
     .button-row{display:flex; gap:8px; margin-top:10px}
     .btn{background:var(--accent); color:#001; padding:10px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700}
     .btn.ghost{background:transparent; color:var(--accent); border:1px solid rgba(255,255,255,0.04)}
@@ -60,6 +59,45 @@
     .saved-codes-output .saved-code-item.fade-out{opacity:0; transform:translateX(8px); height:0; padding:0; margin:0}
     .saved-codes-output .code-display{font-family:monospace; color:var(--muted); font-size:13px}
 
+    /* custom urls list */
+    .custom-url-item-wrapper{display:flex; flex-direction:column; gap:8px; margin-top:10px}
+    .custom-url-item{display:flex; justify-content:space-between; gap:8px; padding:10px; border-radius:8px; align-items:center; background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.008)); transition: all var(--transition)}
+    .custom-url-item.fade-out{opacity:0; transform:translateX(8px); height:0; padding:0; margin:0}
+    .custom-url-item .url-display{font-family:monospace; color:var(--muted); font-size:13px; flex-grow:1;}
+    .url-order-controls{display:flex; align-items:center; gap:6px}
+    .url-order-display{
+        width: 24px;
+        text-align: center;
+        color: var(--muted);
+        font-weight: 700;
+        margin-left: 6px;
+    }
+    
+    /* New styles for the toggle button and the hidden section */
+    .toggle-btn{
+      position:fixed;
+      bottom:20px;
+      right:20px; /* Changed from left to right */
+      background:var(--accent);
+      color:#001;
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      font-weight:700;
+      font-size:16px;
+      cursor:pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+    }
+    
+    #settingsContainer{
+      grid-column: 1 / -1; 
+      display: none;
+    }
+    #settingsContainer.visible {
+      display: block;
+    }
+
     footer{grid-column:1/-1; margin-top:18px; color:var(--muted); font-size:13px; text-align:center}
 
     /* search */
@@ -74,7 +112,10 @@
     .toast{position:fixed;bottom:20px;left:20px;background:rgba(0,0,0,0.7);color:#fff;padding:10px 14px;border-radius:8px;z-index:2000;opacity:0;transition:opacity .25s}
     .toast.show{opacity:1}
 
-    @media (max-width:980px){.app{grid-template-columns:1fr} .side{order:-1}}
+    @media (max-width:980px){
+      .app{grid-template-columns:1fr}
+      .side{order:-1}
+    }
   </style>
 </head>
 <body>
@@ -133,35 +174,62 @@
         </div>
         <div id="outputLoginLinks" class="links-output" style="margin-top:10px">لا توجد روابط.</div>
       </section>
-    </main>
-
-    <aside class="side card">
+      
       <section class="section">
-        <strong>إدارة أكواد البروفايلات المحفوظة</strong>
-        <div class="small">احفظ كود باسم — يعرض الأكواد مع أزرار تحميل/نسخ/حذف</div>
-
-        <div class="search-row">
-          <input type="text" id="savedSearch" class="search-input" placeholder="ابحث في الأكواد المحفوظة...">
-          <div id="savedLoader" style="display:none" class="loader" title="جاري التحميل"></div>
-        </div>
-
-        <label for="codeName" style="margin-top:8px">اسم الكود</label>
-        <input type="text" id="codeName" placeholder="مثال: بروفايل صديق">
-        <div class="button-row" style="margin-top:8px">
-          <button class="btn" id="saveCodeBtn">حفظ الكود</button>
-        </div>
-        <div id="savedCodesOutput" class="saved-codes-output" style="margin-top:12px">لا توجد أكواد محفوظة.</div>
-      </section>
-
-      <section class="section" style="margin-top:14px">
         <strong>السجل الافتراضي</strong>
         <div class="small">استخدم السجل الافتراضي للمهام السريعة</div>
         <div style="margin-top:10px"><button class="btn ghost" id="loadDefaultBtn">تحميل افتراضي</button></div>
       </section>
-    </aside>
+    </main>
+
+    <div class="side">
+      <div class="card">
+        <section class="section">
+          <strong>إدارة أكواد البروفايلات المحفوظة</strong>
+          <div class="small">احفظ كود باسم — يعرض الأكواد مع أزرار تحميل/نسخ/حذف</div>
+
+          <div class="search-row">
+            <input type="text" id="savedSearch" class="search-input" placeholder="ابحث في الأكواد المحفوظة...">
+            <div id="savedLoader" style="display:none" class="loader" title="جاري التحميل"></div>
+          </div>
+
+          <label for="codeName" style="margin-top:8px">اسم الكود</label>
+          <input type="text" id="codeName" placeholder="مثال: بروفايل صديق">
+          <div class="button-row" style="margin-top:8px">
+            <button class="btn" id="saveCodeBtn">حفظ الكود</button>
+          </div>
+          <div id="savedCodesOutput" class="saved-codes-output" style="margin-top:12px">لا توجد أكواد محفوظة.</div>
+        </section>
+      </div>
+    </div>
+
+    <div id="settingsContainer" class="card">
+      <section class="section">
+        <strong>إدارة المواقع المخصصة</strong>
+        <div class="small">أضف، عدّل أو احذف روابط المواقع التي تريدها. يتم حفظ التعديلات تلقائياً.</div>
+        
+        <label for="profileUrlInput" style="margin-top:8px">إضافة رابط بروفايل</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="profileUrlInput" placeholder="https://example.com/profile/" style="flex:1;">
+          <button class="btn" id="addProfileUrlBtn">أضف</button>
+        </div>
+        <div id="profileUrlList" class="custom-url-item-wrapper"></div>
+        
+        <label for="loginUrlInput" style="margin-top:16px">إضافة رابط تسجيل دخول</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="loginUrlInput" placeholder="https://example.com/login" style="flex:1;">
+          <button class="btn" id="addLoginUrlBtn">أضف</button>
+        </div>
+        <div id="loginUrlList" class="custom-url-item-wrapper"></div>
+      </section>
+    </div>
 
     <footer>🌟 تم تحسين الأداء: حفظ آلي مؤجل، تحديث DOM بكفاءة، ومزامنة كاملة مع Firebase.</footer>
   </div>
+
+  <button id="toggleSettingsBtn" class="toggle-btn">
+    ⚙️ الإعدادات
+  </button>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
@@ -187,13 +255,17 @@
     const state = {
       mafiaInputCounter: 0,
       currentRecordName: 'السجل الافتراضي',
+      profileBaseUrls: [],
+      loginBaseUrls: []
     };
 
     const MAFIA_RECORD_NAMES_KEY = 'mafiaRecordNames';
     const MAFIA_CURRENT_RECORD_KEY = 'mafiaCurrentRecord';
     const MAFIA_DEFAULT_RECORD_NAME = 'السجل الافتراضي';
+    const PROFILE_SAVED_CODES_KEY = 'savedProfileCodesList';
+    const CUSTOM_URLS_KEY = 'customUrls';
 
-    const profile_baseUrls = [
+    const defaultProfileUrls = [
       "https://mixu.chat/profile/",
       "https://1v1chat.me/profile/",
       "https://livcam.me/profile/",
@@ -202,7 +274,7 @@
       "https://tumile.chat/profile/"
     ];
 
-    const login_baseUrls = [
+    const defaultLoginUrls = [
       "https://mixu.chat/login",
       "https://1v1chat.me/login",
       "https://livcam.me/login",
@@ -210,8 +282,6 @@
       "https://livuapp.com/login",
       "https://tumile.chat/login"
     ];
-
-    const PROFILE_SAVED_CODES_KEY = 'savedProfileCodesList';
 
     // --------------------------- Helpers ---------------------------
     const el = (id) => document.getElementById(id);
@@ -249,6 +319,92 @@
       } catch (e) {
         showToast('❌ فشل النسخ');
       }
+    };
+
+    // --------------------------- Custom URLs Management ---------------------------
+    const getCustomUrls = async () => {
+      try {
+        const profileSnap = await safeGetDoc(["customUrls", "profile"]);
+        const loginSnap = await safeGetDoc(["customUrls", "login"]);
+        const profileUrls = profileSnap.exists() && profileSnap.data().urls ? profileSnap.data().urls : defaultProfileUrls;
+        const loginUrls = loginSnap.exists() && loginSnap.data().urls ? loginSnap.data().urls : defaultLoginUrls;
+        return { profile: profileUrls, login: loginUrls };
+      } catch (e) {
+        console.error('Failed to get custom URLs, using defaults.', e);
+        return { profile: defaultProfileUrls, login: defaultLoginUrls };
+      }
+    };
+    
+    // Updated functions to handle reordering logic
+    const saveCustomUrls = async (type, urls) => {
+      try {
+        await safeSetDoc(["customUrls", type], { urls: urls, lastUpdated: new Date() });
+        showToast('✅ تم حفظ المواقع');
+      } catch (e) {
+        console.error('Failed to save custom URLs', e);
+        showToast('❌ فشل حفظ المواقع');
+      }
+    };
+    
+    const reorderUrlsSimplified = (arr, fromIndex, toIndex) => {
+      const movedItem = arr.splice(fromIndex, 1)[0];
+      arr.splice(toIndex, 0, movedItem);
+      return arr;
+    };
+    
+    const renderCustomUrls = (urls, containerId, type) => {
+      const container = el(containerId);
+      container.innerHTML = '';
+      
+      urls.forEach((url, index) => {
+        const item = document.createElement('div');
+        item.className = 'custom-url-item';
+        
+        const urlDisplay = document.createElement('div');
+        urlDisplay.className = 'url-display';
+        urlDisplay.textContent = url;
+        
+        const controls = document.createElement('div');
+        controls.className = 'url-order-controls';
+        
+        const orderDisplay = document.createElement('div');
+        orderDisplay.className = 'url-order-display';
+        orderDisplay.textContent = index + 1;
+
+        const deleteBtn = createButton('حذف', 'btn ghost', () => {
+          item.classList.add('fade-out');
+          setTimeout(() => {
+            const newUrls = urls.filter(u => u !== url);
+            state[`${type}BaseUrls`] = newUrls;
+            saveCustomUrls(type, newUrls);
+            renderCustomUrls(newUrls, containerId, type);
+          }, 220);
+        });
+        deleteBtn.style.background = 'var(--danger)';
+        deleteBtn.style.color = '#fff';
+
+        const upBtn = createButton('▲', 'btn ghost', () => {
+          if (index > 0) {
+            const newUrls = reorderUrlsSimplified(urls, index, index - 1);
+            state[`${type}BaseUrls`] = newUrls;
+            saveCustomUrls(type, newUrls);
+            renderCustomUrls(newUrls, containerId, type);
+          }
+        });
+        
+        const downBtn = createButton('▼', 'btn ghost', () => {
+          if (index < urls.length - 1) {
+            const newUrls = reorderUrlsSimplified(urls, index, index + 1);
+            state[`${type}BaseUrls`] = newUrls;
+            saveCustomUrls(type, newUrls);
+            renderCustomUrls(newUrls, containerId, type);
+          }
+        });
+
+        controls.append(orderDisplay, upBtn, downBtn, deleteBtn);
+        item.append(urlDisplay, controls);
+        container.appendChild(item);
+      });
     };
 
     // --------------------------- Records CRUD ---------------------------
@@ -525,7 +681,7 @@
       try {
         const last = localStorage.getItem('lastCode');
         if (last && fullUrl.endsWith(last)) localStorage.removeItem('lastCode');
-        const code = profile_baseUrls.reduce((acc, base) => fullUrl.startsWith(base) ? fullUrl.slice(base.length) : acc, null);
+        const code = state.profileBaseUrls.reduce((acc, base) => fullUrl.startsWith(base) ? fullUrl.slice(base.length) : acc, null);
         if (code) {
           const saved = await getSavedCodes();
           const filtered = saved.filter(s => s.code !== code);
@@ -551,7 +707,7 @@
         return;
       }
       const frag = document.createDocumentFragment();
-      profile_baseUrls.forEach(base => {
+      state.profileBaseUrls.forEach(base => {
         const full = base + code;
         frag.appendChild(createLinkRow(full, true));
       });
@@ -571,7 +727,7 @@
       const out = el('outputLoginLinks');
       out.innerHTML = '';
       const frag = document.createDocumentFragment();
-      login_baseUrls.forEach(base => {
+      state.loginBaseUrls.forEach(base => {
         const full = base + (code ? '/' + code : '');
         frag.appendChild(createLinkRow(full));
       });
@@ -712,14 +868,14 @@
         
         const loadBtn = createButton('تحميل', 'btn ghost', () => loadProfileCode(item.code));
         const copyBtn = createButton('نسخ', 'btn', () => copyToClipboard(item.code, copyBtn));
-        const editBtn = createButton('تعديل', 'btn ghost', () => editProfileCode(item.name, item.code)); // الزر الجديد
+        const editBtn = createButton('تعديل', 'btn ghost', () => editProfileCode(item.name, item.code));
         const delBtn = createButton('مسح', 'btn ghost', async () => {
           wrap.classList.add('fade-out');
           await wait(220);
           deleteProfileCode(item.name);
         });
         
-        right.append(loadBtn, copyBtn, editBtn, delBtn); // إضافة الزر الجديد هنا
+        right.append(loadBtn, copyBtn, editBtn, delBtn);
         wrap.append(left, right);
         frag.appendChild(wrap);
       }
@@ -728,6 +884,13 @@
 
     // --------------------------- Init on load ---------------------------
     document.addEventListener('DOMContentLoaded', async () => {
+      // Load custom URLs first
+      const urls = await getCustomUrls();
+      state.profileBaseUrls = urls.profile;
+      state.loginBaseUrls = urls.login;
+      renderCustomUrls(state.profileBaseUrls, 'profileUrlList', 'profile');
+      renderCustomUrls(state.loginBaseUrls, 'loginUrlList', 'login');
+
       // Wire UI buttons
       el('addFieldBtn').addEventListener('click', () => addInputField('', true));
       el('clearAllBtn').addEventListener('click', clearCurrentDataAndStartNew);
@@ -741,8 +904,40 @@
       el('loadDefaultBtn').addEventListener('click', () => loadRecord(MAFIA_DEFAULT_RECORD_NAME));
       el('mafiaRecordSelector').addEventListener('change', loadSelectedRecord);
       el('savedSearch').addEventListener('input', debounce((e) => renderSavedCodes(e.target.value.trim()), 250));
+      
+      el('addProfileUrlBtn').addEventListener('click', () => {
+        const url = el('profileUrlInput').value.trim();
+        if (url && !state.profileBaseUrls.includes(url)) {
+          state.profileBaseUrls.push(url);
+          el('profileUrlInput').value = '';
+          saveCustomUrls('profile', state.profileBaseUrls);
+          renderCustomUrls(state.profileBaseUrls, 'profileUrlList', 'profile');
+        } else if (url) {
+          showToast('⚠ الرابط موجود بالفعل');
+        } else {
+          showToast('⚠ أدخل رابط صالح');
+        }
+      });
+      el('addLoginUrlBtn').addEventListener('click', () => {
+        const url = el('loginUrlInput').value.trim();
+        if (url && !state.loginBaseUrls.includes(url)) {
+          state.loginBaseUrls.push(url);
+          el('loginUrlInput').value = '';
+          saveCustomUrls('login', state.loginBaseUrls);
+          renderCustomUrls(state.loginBaseUrls, 'loginUrlList', 'login');
+        } else if (url) {
+          showToast('⚠ الرابط موجود بالفعل');
+        } else {
+          showToast('⚠ أدخل رابط صالح');
+        }
+      });
+      el('toggleSettingsBtn').addEventListener('click', () => {
+        const settingsContainer = el('settingsContainer');
+        settingsContainer.classList.toggle('visible');
+      });
 
-      // Initial load: always prefer Firebase as source of truth
+
+      // Initial load of records
       await updateRecordSelector();
       try {
         const currentRecordDoc = await safeGetDoc(["mafiaMetadata", MAFIA_CURRENT_RECORD_KEY]);
