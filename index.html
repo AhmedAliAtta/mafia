@@ -18,10 +18,12 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0; font-family:'Playpen Sans Arabic',system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial; 
-      background:linear-gradient(180deg,#091018 0%, #071021 100%); color:#e6eef6; direction:rtl; 
-      -webkit-font-smoothing:antialiased; padding:18px;
-    }
+      body {
+  margin:0; font-family:'Playpen Sans Arabic',system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial; 
+  background: #091018; /* <--- تم التعديل هنا لخلفية بلون واحد */
+  color:#e6eef6; direction:rtl; 
+  -webkit-font-smoothing:antialiased; padding:18px;
+}
     .app{max-width:1100px; margin:0 auto; display:grid; grid-template-columns: 1fr 420px; gap:20px; align-items:start}
     header{grid-column:1/ -1; display:flex; justify-content:space-between; align-items:center; gap:12px}
     h1{margin:0; font-size:20px; color:var(--accent)}
@@ -973,3 +975,4 @@
   </script>
 </body>
 </html>
+
